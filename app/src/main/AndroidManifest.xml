@@ -16,6 +16,10 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <service android:name = ".ImageServiceService" android:exported="false"/>
     </application>
+
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" xmlns:android="http://schemas.android.com/apk/res/android" />
+    <uses-permission android:name="android.permission.INTERNET"/>
 
 </manifest>
