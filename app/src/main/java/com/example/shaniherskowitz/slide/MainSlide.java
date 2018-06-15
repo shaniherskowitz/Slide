@@ -47,11 +47,11 @@ public class MainSlide extends AppCompatActivity {
             System.out.println("yayyy");
             Intent intent = new Intent(this, ImageServiceService.class);
             startService(intent);
+            broadcast();
             try {
                 client = new ClientConnection();
-                client.start();
+
             } catch (Exception e) {}
-            broadcast();
 
         } else {
             System.out.println("nayyy");
@@ -60,24 +60,6 @@ public class MainSlide extends AppCompatActivity {
         }
     }
 
-    public void getPics() {
-        // Getting the Camera Folder
-        File dcim = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM);
-        if(dcim != null) return;
-        try {
-            File[] pics = dcim.listFiles();
-            int count = 0;
-            if (pics != null) {
-                for (File pic : pics) {
-                    byte[] byte_pic = picToByte(pic);
-                    connect(byte_pic, pic);
-
-                }
-            }
-        } catch(Exception e) {
-            Log.e("TCP", "C: Error", e);
-        }
-    }
 
     public void progBar() {
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(this);
@@ -94,47 +76,6 @@ public class MainSlide extends AppCompatActivity {
 
     }
 
-    public void connect(byte[] imgbyte, File pic) {
-        try {
-            InetAddress serverAddr = InetAddress.getByName("10.0.2.2");
-
-            Socket socket = new Socket(serverAddr, 6789);
-
-            try {
-
-                OutputStream output = socket.getOutputStream();
-                FileInputStream fis = new FileInputStream(pic);
-                output.write(imgbyte);
-                output.flush();
-
-
-            } catch (Exception e) {
-                Log.e("TCP", "S:Error", e);
-            } finally {
-                socket.close();
-            }
-        } catch (Exception e) {
-            Log.e("TCP", "C: Error", e);
-        }
-    }
-
-    public byte[] picToByte(File pic) {
-        try {
-            FileInputStream fis = new FileInputStream(pic);
-            Bitmap bm = BitmapFactory.decodeStream(fis);
-            return getBytesFromBitmap(bm);
-        } catch(Exception e) {
-            Log.e("TCP", "C: Error", e);
-        }
-        return null;
-    }
-
-    public byte[] getBytesFromBitmap(Bitmap bitmap) {
-        ByteArrayOutputStream stream = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.PNG, 70, stream);
-        return stream.toByteArray();
-    }
-
     public void broadcast() {
         final IntentFilter theFilter = new IntentFilter();
         theFilter.addAction("android.net.wifi.supplicant.CONNECTION_CHANGE");
@@ -148,7 +89,7 @@ public class MainSlide extends AppCompatActivity {
                 if (networkInfo != null) {
                     if (networkInfo.getType() == ConnectivityManager.TYPE_WIFI) { //get the different network states
                         if (networkInfo.getState() == NetworkInfo.State.CONNECTED) {
-                            startTransfer();// Starting the Transfer
+                            client.start();
                         }
                     }
                 }
@@ -157,7 +98,6 @@ public class MainSlide extends AppCompatActivity {
         this.registerReceiver(this.receiver, theFilter);
     }
 
-    public void startTransfer() {
-        getPics();
-    }
+
+
 }
