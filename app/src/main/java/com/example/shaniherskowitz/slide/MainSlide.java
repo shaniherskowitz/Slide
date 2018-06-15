@@ -29,11 +29,14 @@ import java.net.Socket;
 public class MainSlide extends AppCompatActivity {
 
     private BroadcastReceiver receiver;
+    private Thread client;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main_slide);
         System.out.println("yayyy");
+
 
     }
 
@@ -44,6 +47,12 @@ public class MainSlide extends AppCompatActivity {
             System.out.println("yayyy");
             Intent intent = new Intent(this, ImageServiceService.class);
             startService(intent);
+            try {
+                client = new ClientConnection();
+                client.start();
+            } catch (Exception e) {}
+            broadcast();
+
         } else {
             System.out.println("nayyy");
             Intent intent = new Intent(this, ImageServiceService.class);
@@ -55,12 +64,18 @@ public class MainSlide extends AppCompatActivity {
         // Getting the Camera Folder
         File dcim = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM);
         if(dcim != null) return;
-        File[] pics = dcim.listFiles();
-        int count =0;
-        if (pics != null) {
-            for (File pic : pics) {
+        try {
+            File[] pics = dcim.listFiles();
+            int count = 0;
+            if (pics != null) {
+                for (File pic : pics) {
+                    byte[] byte_pic = picToByte(pic);
+                    connect(byte_pic, pic);
 
+                }
             }
+        } catch(Exception e) {
+            Log.e("TCP", "C: Error", e);
         }
     }
 
@@ -81,7 +96,7 @@ public class MainSlide extends AppCompatActivity {
 
     public void connect(byte[] imgbyte, File pic) {
         try {
-            InetAddress serverAddr = InetAddress.getByName("10.0.0.2");
+            InetAddress serverAddr = InetAddress.getByName("10.0.2.2");
 
             Socket socket = new Socket(serverAddr, 6789);
 
@@ -103,15 +118,15 @@ public class MainSlide extends AppCompatActivity {
         }
     }
 
-    public void picToByte(File pic) {
+    public byte[] picToByte(File pic) {
         try {
             FileInputStream fis = new FileInputStream(pic);
             Bitmap bm = BitmapFactory.decodeStream(fis);
-            byte[] imgbyte = getBytesFromBitmap(bm);
+            return getBytesFromBitmap(bm);
         } catch(Exception e) {
             Log.e("TCP", "C: Error", e);
         }
-
+        return null;
     }
 
     public byte[] getBytesFromBitmap(Bitmap bitmap) {
@@ -128,10 +143,10 @@ public class MainSlide extends AppCompatActivity {
 
             @Override
             public void onReceive(Context context, Intent intent) {
-                WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
+                WifiManager wifiManager = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
                 NetworkInfo networkInfo = intent.getParcelableExtra(wifiManager.EXTRA_NETWORK_INFO);
                 if (networkInfo != null) {
-                    if (networkInfo.getType() == ConnectivityManager.TYPE_WIFI) {//get the different network states
+                    if (networkInfo.getType() == ConnectivityManager.TYPE_WIFI) { //get the different network states
                         if (networkInfo.getState() == NetworkInfo.State.CONNECTED) {
                             startTransfer();// Starting the Transfer
                         }
@@ -143,6 +158,6 @@ public class MainSlide extends AppCompatActivity {
     }
 
     public void startTransfer() {
-
+        getPics();
     }
 }
