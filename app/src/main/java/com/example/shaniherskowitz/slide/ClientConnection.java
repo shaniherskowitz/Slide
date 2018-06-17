@@ -1,14 +1,7 @@
 package com.example.shaniherskowitz.slide;
 
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
-import android.net.wifi.WifiManager;
 import android.os.Environment;
 import android.util.Log;
 
@@ -18,17 +11,15 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintWriter;
-import java.net.InetAddress;
-import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Scanner;
 
-public class ClientConnection extends Thread{
+public class ClientConnection extends Thread {
 
     public Socket socket;
     private Scanner scanner;
 
-    public ClientConnection() throws Exception {
+    public ClientConnection() {
 
 
     }
@@ -56,7 +47,6 @@ public class ClientConnection extends Thread{
     }
 
 
-
     public void startTransfer() {
         getPics();
     }
@@ -64,17 +54,14 @@ public class ClientConnection extends Thread{
 
     public void connect(byte[] imgbyte, File pic) {
         try {
-            InetAddress serverAddr = InetAddress.getByName("10.0.2.2");
-
-            Socket socket = new Socket(serverAddr, 6789);
-
             try {
 
                 OutputStream output = socket.getOutputStream();
                 FileInputStream fis = new FileInputStream(pic);
+
+
                 output.write(imgbyte);
                 output.flush();
-
 
             } catch (Exception e) {
                 Log.e("TCP", "S:Error", e);
@@ -86,6 +73,7 @@ public class ClientConnection extends Thread{
         }
     }
 
+
     public byte[] picToByte(File pic) {
         try {
             FileInputStream fis = new FileInputStream(pic);
@@ -96,6 +84,7 @@ public class ClientConnection extends Thread{
         }
         return null;
     }
+
 
     public byte[] getBytesFromBitmap(Bitmap bitmap) {
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
@@ -121,6 +110,4 @@ public class ClientConnection extends Thread{
             Log.e("TCP", "C: Error", e);
         }
     }
-
-
 }
