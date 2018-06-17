@@ -19,34 +19,43 @@ public class MainSlide extends AppCompatActivity {
     private BroadcastReceiver receiver;
     private Thread client;
 
+    /**
+     * Create the app
+     * @param savedInstanceState
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main_slide);
-        System.out.println("yayyy");
-
-
     }
 
+    /**
+     * Deals with the service switch - when it is on and off
+     * @param view - the app view
+     */
     public void serviceSwitch(View view) {
         Switch s = findViewById(R.id.switch1);
         if(s.isChecked()) {
-            System.out.println("yayyy");
+            //create an intent as an activity to either start or stop the service
             Intent intent = new Intent(this, ImageServiceService.class);
             startService(intent);
+            //send images when connected to wifi
             broadcast();
             try {
+                //create the connection with the client
                 client = new ClientConnection();
 
             } catch (Exception e) {}
 
         } else {
-            System.out.println("nayyy");
             Intent intent = new Intent(this, ImageServiceService.class);
             stopService(intent);
         }
     }
 
+    /**
+     * For the progress bar
+     */
     public void progBar() {
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(this);
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, "default");
@@ -62,6 +71,9 @@ public class MainSlide extends AppCompatActivity {
 
     }
 
+    /**
+     * only send images when connected to wifi
+     */
     public void broadcast() {
         final IntentFilter theFilter = new IntentFilter();
         theFilter.addAction("android.net.wifi.supplicant.CONNECTION_CHANGE");
