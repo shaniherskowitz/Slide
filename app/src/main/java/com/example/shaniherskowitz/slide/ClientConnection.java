@@ -2,6 +2,7 @@ package com.example.shaniherskowitz.slide;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Path;
 import android.os.Environment;
 import android.util.Log;
 
@@ -12,6 +13,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.nio.file.Paths;
 import java.util.Scanner;
 
 public class ClientConnection extends Thread {
@@ -74,7 +76,7 @@ public class ClientConnection extends Thread {
             try {
 
                 OutputStream output = socket.getOutputStream();
-                FileInputStream fis = new FileInputStream(pic);
+                FileInputStream fis = new FileInputStream(pic + "/IMG_20180617_122237.jpg");
 
 
                 output.write(imgbyte);
@@ -98,7 +100,7 @@ public class ClientConnection extends Thread {
      */
     public byte[] picToByte(File pic) {
         try {
-            FileInputStream fis = new FileInputStream(pic);
+            FileInputStream fis = new FileInputStream(pic + "/IMG_20180617_122237.jpg");
             Bitmap bm = BitmapFactory.decodeStream(fis);
             return getBytesFromBitmap(bm);
         } catch(Exception e) {
@@ -124,7 +126,7 @@ public class ClientConnection extends Thread {
     public void getPics() {
         // Getting the Camera Folder
         File dcim = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM);
-        if(dcim != null) return;
+        if(dcim == null) return;
         try {
             File[] pics = dcim.listFiles();
             int count = 0;
