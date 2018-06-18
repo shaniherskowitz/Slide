@@ -4,9 +4,11 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Path;
 import android.os.Environment;
+import android.util.Base64;
 import android.util.Log;
 
 import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -20,6 +22,7 @@ public class ClientConnection extends Thread {
 
     public Socket socket;
     private Scanner scanner;
+    DataOutputStream dOut;
 
     /**
      * Creates the client connection
@@ -75,17 +78,25 @@ public class ClientConnection extends Thread {
         try {
             try {
 
-                OutputStream output = socket.getOutputStream();
-                FileInputStream fis = new FileInputStream(pic);
+//                OutputStream output = socket.getOutputStream();
+//                FileInputStream fis = new FileInputStream(pic);
+//
+//                String encodedImage = Base64.encodeToString(imgbyte , Base64.DEFAULT);
+//                PrintWriter out = new PrintWriter(this.socket.getOutputStream(), true);
+//                out.println(encodedImage);
+//                out.flush();
 
 
-                output.write(imgbyte);
-                output.flush();
+
+                dOut.writeInt(imgbyte.length); // write length of the message
+                dOut.write(imgbyte);
+                //output.write(imgbyte);
+                //output.flush();
 
             } catch (Exception e) {
                 Log.e("TCP", "S:Error", e);
             } finally {
-                socket.close();
+                //socket.close();
             }
         } catch (Exception e) {
             Log.e("TCP", "C: Error", e);
@@ -130,6 +141,8 @@ public class ClientConnection extends Thread {
         try {
             File[] pics = dcim.listFiles();
             int count = 0;
+            dOut = new DataOutputStream(socket.getOutputStream());
+            dOut.writeInt(pics.length); // write length of the message
             if (pics != null) {
                 File pictures = pics[0];
                 for (File pic : pics) {
@@ -140,6 +153,13 @@ public class ClientConnection extends Thread {
             }
         } catch(Exception e) {
             Log.e("TCP", "C: Error", e);
+        } finally {
+            try {
+                socket.close();
+            } catch (Exception d) {
+                
+            }
+
         }
     }
 }
