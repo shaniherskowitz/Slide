@@ -28,6 +28,8 @@ public class MainSlide extends AppCompatActivity {
     private Context context;
     private BroadcastReceiver receiver;
     private Thread client;
+    private NotificationCompat.Builder builder;
+    private NotificationManager nm;
 
     /**
      * Create the app
@@ -79,7 +81,7 @@ public class MainSlide extends AppCompatActivity {
             progBar();
             try {
                 //create the connection with the client
-                client = new ClientConnection();
+                client = new ClientConnection(builder, nm);
 
             } catch (Exception e) {}
 
@@ -94,30 +96,16 @@ public class MainSlide extends AppCompatActivity {
      */
     public void progBar() {
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(this);
-        NotificationManager nm = (NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
+        nm = (NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
         NotificationChannel channel = null;
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
             channel = new NotificationChannel("default", "default", NotificationManager.IMPORTANCE_DEFAULT);
             nm.createNotificationChannel(channel);
         }
 
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, "default");
+        builder = new NotificationCompat.Builder(this, "default");
         builder.setSmallIcon(R.drawable.ic_launcher_foreground);
         builder.setContentTitle("Picture Transfer");
-        builder.setContentText("Transfer in progress");
-        builder.setPriority(NotificationCompat.PRIORITY_LOW);
-        builder.setContentText("Half way through");
-        
-        builder.setProgress(100, 50, false);
-        builder.setSmallIcon(R.drawable.image);
-        try {
-            nm.notify(1, builder.build());
-            builder.setContentText("Download complete");
-            builder.setProgress(0, 0, false);
-            nm.notify(1, builder.build());
-        } catch (Exception e) {
-            System.out.println(e.toString());
-        }
 
     }
 

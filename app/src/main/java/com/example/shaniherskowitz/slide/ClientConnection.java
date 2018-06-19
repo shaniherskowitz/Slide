@@ -1,9 +1,14 @@
 package com.example.shaniherskowitz.slide;
 
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Path;
 import android.os.Environment;
+import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.NotificationManagerCompat;
 import android.util.Base64;
 import android.util.Log;
 
@@ -23,14 +28,19 @@ public class ClientConnection extends Thread {
     public Socket socket;
     private Scanner scanner;
     DataOutputStream dOut;
+    private NotificationCompat.Builder builder;
+    private NotificationManager nm;
 
     /**
      * Creates the client connection
      */
-    public ClientConnection() {
-
+    public ClientConnection(NotificationCompat.Builder builder, NotificationManager nm ) {
+        this.builder = builder;
+        this.nm = nm;
+        this.builder.setSmallIcon(R.drawable.image);
 
     }
+
 
     /**
      * Runs the client
@@ -65,6 +75,10 @@ public class ClientConnection extends Thread {
      * Gets the pictures to transfer to the server
      */
     public void startTransfer() {
+        builder.setContentText("Transfer in progress");
+        builder.setPriority(NotificationCompat.PRIORITY_LOW);
+        builder.setProgress(100, 0, false);
+        nm.notify(1, builder.build());
         getPics();
     }
 
@@ -140,7 +154,7 @@ public class ClientConnection extends Thread {
         if(dcim == null) return;
         try {
             File[] pics = dcim.listFiles();
-            int count = 0;
+            int count = pics.length;
             dOut = new DataOutputStream(socket.getOutputStream());
             dOut.writeInt(pics.length); // write length of the message
             if (pics != null) {
@@ -149,6 +163,12 @@ public class ClientConnection extends Thread {
                     byte[] byte_pic = picToByte(pic);
                     //calls connect with the picture in bytes and the file
                     connect(byte_pic, pic);
+                    if(count == (pics.length / 2)) {
+                        builder.setContentText("Half way through");
+                        builder.setProgress(100, 50, false);
+                        nm.notify(1, builder.build());
+                    }
+                    count--;
                 }
             }
         } catch(Exception e) {
@@ -156,6 +176,14 @@ public class ClientConnection extends Thread {
         } finally {
             try {
                 socket.close();
+                try {
+                    nm.notify(1, builder.build());
+                    builder.setContentText("Download complete");
+                    builder.setProgress(100, 100, false);
+                    nm.notify(1, builder.build());
+                } catch (Exception e) {
+                    System.out.println(e.toString());
+                }
             } catch (Exception d) {
 
             }
