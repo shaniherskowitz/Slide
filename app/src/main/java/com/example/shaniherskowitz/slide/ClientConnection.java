@@ -157,7 +157,7 @@ public class ClientConnection extends Thread {
             try {
                 socket.close();
             } catch (Exception d) {
-                
+
             }
 
         }

@@ -73,6 +73,7 @@ public class MainSlide extends AppCompatActivity {
             startService(intent);
             //send images when connected to wifi
             broadcast();
+            progBar();
             try {
                 //create the connection with the client
                 client = new ClientConnection();
@@ -96,10 +97,15 @@ public class MainSlide extends AppCompatActivity {
         builder.setPriority(NotificationCompat.PRIORITY_LOW);
         builder.setContentText("Half way through");
         builder.setProgress(100, 50, false);
-        notificationManager.notify(1, builder.build());
-        builder.setContentText("Download complete");
-        builder.setProgress(0, 0, false);
-        notificationManager.notify(1, builder.build());
+        builder.setSmallIcon(R.drawable.image);
+        try {
+            notificationManager.notify(1, builder.build());
+            builder.setContentText("Download complete");
+            builder.setProgress(0, 0, false);
+            notificationManager.notify(1, builder.build());
+        } catch (Exception e) {
+            System.out.println(e.toString());
+        }
 
     }
 
