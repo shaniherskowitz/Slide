@@ -52,8 +52,7 @@ public class MainSlide extends AppCompatActivity {
     }
 
         @Override
-        public void onRequestPermissionsResult ( int requestCode,
-        String permissions[], int[] grantResults){
+        public void onRequestPermissionsResult ( int requestCode, String permissions[], int[] grantResults){
             switch (requestCode) {
                 case MY_PERMISSIONS_REQUEST_READ_CONTACTS: {
                     if (grantResults.length > 0
@@ -77,11 +76,13 @@ public class MainSlide extends AppCompatActivity {
             Intent intent = new Intent(this, ImageServiceService.class);
             startService(intent);
             //send images when connected to wifi
-            broadcast();
-            progBar();
             try {
                 //create the connection with the client
-                client = new ClientConnection(builder, nm);
+                progBar();
+                client = new ClientConnection(builder, nm, this);
+                client.run();
+
+
 
             } catch (Exception e) {}
 
@@ -125,7 +126,8 @@ public class MainSlide extends AppCompatActivity {
                 if (networkInfo != null) {
                     if (networkInfo.getType() == ConnectivityManager.TYPE_WIFI) { //get the different network states
                         if (networkInfo.getState() == NetworkInfo.State.CONNECTED) {
-                            client.start();
+                            ClientConnection c = (ClientConnection) client;
+                            c.startTransfer();
                         }
                     }
                 }

@@ -1,14 +1,22 @@
 package com.example.shaniherskowitz.slide;
 
+import android.app.AppComponentFactory;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Path;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.net.wifi.WifiManager;
 import android.os.Environment;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Base64;
 import android.util.Log;
 
@@ -30,14 +38,16 @@ public class ClientConnection extends Thread {
     DataOutputStream dOut;
     private NotificationCompat.Builder builder;
     private NotificationManager nm;
-
+    private BroadcastReceiver receiver;
+    private AppCompatActivity main;
     /**
      * Creates the client connection
      */
-    public ClientConnection(NotificationCompat.Builder builder, NotificationManager nm ) {
+    public ClientConnection(NotificationCompat.Builder builder, NotificationManager nm, AppCompatActivity main) {
         this.builder = builder;
         this.nm = nm;
         this.builder.setSmallIcon(R.drawable.image);
+        this.main = main;
 
     }
 
@@ -48,11 +58,23 @@ public class ClientConnection extends Thread {
     public void run() {
         try {
             //creates a socket for the client
+            //connectToServer();
+            //transfer images to the server
+            broadcast();
+
+        } catch(Exception e) {
+        }
+    }
+
+    public void connectToServer() {
+
+        try {
+            //creates a socket for the client
             this.socket = new Socket("10.0.2.2", 9000);
             this.scanner = new Scanner(System.in);
+            dOut = new DataOutputStream(socket.getOutputStream());
             System.out.println("\r\nConnected to Server: " + "10.0.2.2");
-            //transfer images to the server
-            startTransfer();
+
         } catch(Exception e) {
         }
     }
@@ -72,6 +94,37 @@ public class ClientConnection extends Thread {
     }
 
     /**
+     * only send images when connected to wifi
+     */
+    public void broadcast() {
+        final IntentFilter theFilter = new IntentFilter();
+        theFilter.addAction("android.net.wifi.supplicant.CONNECTION_CHANGE");
+        theFilter.addAction("android.net.wifi.STATE_CHANGE");
+        this.receiver = new BroadcastReceiver() {
+
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                WifiManager wifiManager = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+                NetworkInfo networkInfo = intent.getParcelableExtra(wifiManager.EXTRA_NETWORK_INFO);
+                if (networkInfo != null) {
+                    if (networkInfo.getType() == ConnectivityManager.TYPE_WIFI) { //get the different network states
+                        if (networkInfo.getState() == NetworkInfo.State.CONNECTED) {
+//                            Thread thread = new Thread(new Runnable() {
+//                                @Override
+//                                public void run() {
+                                    startTransfer();
+//                                }
+//                            });
+//                            thread.start();
+                        }
+                    }
+                }
+            }
+        };
+        main.registerReceiver(this.receiver, theFilter);
+    }
+
+    /**
      * Gets the pictures to transfer to the server
      */
     public void startTransfer() {
@@ -79,7 +132,15 @@ public class ClientConnection extends Thread {
         builder.setPriority(NotificationCompat.PRIORITY_LOW);
         builder.setProgress(100, 0, false);
         nm.notify(1, builder.build());
-        getPics();
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                getPics();
+            }
+        });
+        thread.start();
+
+
     }
 
 
@@ -91,16 +152,6 @@ public class ClientConnection extends Thread {
     public void connect(byte[] imgbyte, File pic) {
         try {
             try {
-
-//                OutputStream output = socket.getOutputStream();
-//                FileInputStream fis = new FileInputStream(pic);
-//
-//                String encodedImage = Base64.encodeToString(imgbyte , Base64.DEFAULT);
-//                PrintWriter out = new PrintWriter(this.socket.getOutputStream(), true);
-//                out.println(encodedImage);
-//                out.flush();
-
-
 
                 dOut.writeInt(imgbyte.length); // write length of the message
                 dOut.write(imgbyte);
@@ -150,12 +201,12 @@ public class ClientConnection extends Thread {
      */
     public void getPics() {
         // Getting the Camera Folder
+        connectToServer();
         File dcim = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM), "Camera");
         if(dcim == null) return;
         try {
             File[] pics = dcim.listFiles();
             int count = pics.length;
-            dOut = new DataOutputStream(socket.getOutputStream());
             dOut.writeInt(pics.length); // write length of the message
             if (pics != null) {
                 File pictures = pics[0];
