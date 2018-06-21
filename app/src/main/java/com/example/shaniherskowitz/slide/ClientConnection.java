@@ -64,6 +64,10 @@ public class ClientConnection extends Thread {
 
     }
 
+    /**
+     * Set on, when client connect
+     * @param on - boolean to set on
+     */
     public void setOn(boolean on) {
         this.on = on;
     }
@@ -74,15 +78,15 @@ public class ClientConnection extends Thread {
      */
     public void run() {
         try {
-            //creates a socket for the client
-            //connectToServer();
-            //transfer images to the server
             broadcast();
 
         } catch (Exception e) {
         }
     }
 
+    /**
+     * Connects to the server, creates a socket etc.
+     */
     public void connectToServer() {
 
         try {
@@ -225,6 +229,11 @@ public class ClientConnection extends Thread {
         return stream.toByteArray();
     }
 
+    /**
+     * Recusrively goes through the camera folder to find all pics
+     * @param pics - list of pics
+     * @param file - the file
+     */
     private void recursivePics(List<File> pics, File file) {
         if (file.isDirectory()) {
             File[] files = file.listFiles();

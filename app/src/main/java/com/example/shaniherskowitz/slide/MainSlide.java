@@ -60,6 +60,12 @@ public class MainSlide extends AppCompatActivity {
         }
     }
 
+    /**
+     * Permission to get dcim folder
+     * @param requestCode - int
+     * @param permissions - string
+     * @param grantResults - int[]
+     */
     @Override
     public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
         switch (requestCode) {
