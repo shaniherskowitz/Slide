@@ -47,9 +47,6 @@ public class MainSlide extends AppCompatActivity {
             client = new ClientConnection(builder, nm, this, false);
             client.broadcast();
 
-
-
-
         } catch (Exception e) {
         }
         if (ContextCompat.checkSelfPermission(context,
@@ -63,15 +60,12 @@ public class MainSlide extends AppCompatActivity {
         }
     }
 
-
-
     @Override
     public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
         switch (requestCode) {
             case MY_PERMISSIONS_REQUEST_READ_CONTACTS: {
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-
                 } else {
                 }
             }
@@ -81,7 +75,6 @@ public class MainSlide extends AppCompatActivity {
 
     /**
      * Deals with the service switch - when it is on and off
-     *
      * @param view - the app view
      */
     public void serviceSwitch(View view) {
@@ -92,12 +85,10 @@ public class MainSlide extends AppCompatActivity {
             startService(intent);
             client.setOn(true);
             if(client.isConnected()) client.startTransfer();
-
         } else {
             Intent intent = new Intent(this, ImageServiceService.class);
             stopService(intent);
             client.setOn(false);
-
         }
     }
 
@@ -112,11 +103,9 @@ public class MainSlide extends AppCompatActivity {
             channel = new NotificationChannel("default", "default", NotificationManager.IMPORTANCE_DEFAULT);
             nm.createNotificationChannel(channel);
         }
-
         builder = new NotificationCompat.Builder(this, "default");
         builder.setSmallIcon(R.drawable.ic_launcher_foreground);
         builder.setContentTitle("Picture Transfer");
-
     }
 
     /**

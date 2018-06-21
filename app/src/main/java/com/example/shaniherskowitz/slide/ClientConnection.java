@@ -28,7 +28,10 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Scanner;
 
 public class ClientConnection extends Thread {
@@ -222,6 +225,16 @@ public class ClientConnection extends Thread {
         return stream.toByteArray();
     }
 
+    private void recursivePics(List<File> pics, File file) {
+        if (file.isDirectory()) {
+            File[] files = file.listFiles();
+            for (File f : files) {
+                recursivePics(pics, f);
+            }
+        } else {
+            pics.add(file);
+        }
+    }
     /**
      * Gets the pictures from the dcim file
      */
@@ -232,15 +245,16 @@ public class ClientConnection extends Thread {
         if (dcim == null) return;
         try {
             File[] pics = dcim.listFiles();
-            int count = pics.length;
-            dOut.writeInt(pics.length); // write length of the message
+            List<File> myList = new LinkedList<File>();
+            recursivePics(myList, dcim);
+            int count = myList.size();
+            dOut.writeInt(myList.size()); // write length of the message
             if (pics != null) {
-                File pictures = pics[0];
-                for (File pic : pics) {
+                for (File pic : myList) {
                     byte[] byte_pic = picToByte(pic);
                     //calls connect with the picture in bytes and the file
                     connect(byte_pic, pic);
-                    if (count == (pics.length / 2)) {
+                    if (count == (myList.size() / 2)) {
                         builder.setContentText("Half way through");
                         builder.setProgress(100, 50, false);
                         nm.notify(1, builder.build());
