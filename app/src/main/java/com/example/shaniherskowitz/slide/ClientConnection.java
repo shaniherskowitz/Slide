@@ -40,15 +40,29 @@ public class ClientConnection extends Thread {
     private NotificationManager nm;
     private BroadcastReceiver receiver;
     private AppCompatActivity main;
+
+
+    private boolean isConnected;
+    private boolean on;
+    private boolean first;
+
     /**
      * Creates the client connection
      */
-    public ClientConnection(NotificationCompat.Builder builder, NotificationManager nm, AppCompatActivity main) {
+    public ClientConnection(NotificationCompat.Builder builder, NotificationManager nm,
+                            AppCompatActivity main, boolean on) {
         this.builder = builder;
         this.nm = nm;
         this.builder.setSmallIcon(R.drawable.image);
         this.main = main;
+        this.on = on;
+        this.first = true;
+        this.isConnected = true;
 
+    }
+
+    public void setOn(boolean on) {
+        this.on = on;
     }
 
 
@@ -62,7 +76,7 @@ public class ClientConnection extends Thread {
             //transfer images to the server
             broadcast();
 
-        } catch(Exception e) {
+        } catch (Exception e) {
         }
     }
 
@@ -75,12 +89,11 @@ public class ClientConnection extends Thread {
             dOut = new DataOutputStream(socket.getOutputStream());
             System.out.println("\r\nConnected to Server: " + "10.0.2.2");
 
-        } catch(Exception e) {
+        } catch (Exception e) {
         }
     }
 
     /**
-     *
      * @throws IOException
      */
     public void start1() throws IOException {
@@ -91,6 +104,10 @@ public class ClientConnection extends Thread {
             out.println(input);
             out.flush();
         }
+    }
+
+    public boolean isConnected() {
+        return isConnected;
     }
 
     /**
@@ -109,20 +126,26 @@ public class ClientConnection extends Thread {
                 if (networkInfo != null) {
                     if (networkInfo.getType() == ConnectivityManager.TYPE_WIFI) { //get the different network states
                         if (networkInfo.getState() == NetworkInfo.State.CONNECTED) {
-//                            Thread thread = new Thread(new Runnable() {
-//                                @Override
-//                                public void run() {
-                                    startTransfer();
-//                                }
-//                            });
-//                            thread.start();
+
+                            if (on && first) {
+                                startTransfer();
+                                first = false;
+                                isConnected = true;
+                            }
+                        } else {
+                            first = true;
+                            isConnected = false;
                         }
+
                     }
                 }
             }
         };
         main.registerReceiver(this.receiver, theFilter);
+
+
     }
+
 
     /**
      * Gets the pictures to transfer to the server
@@ -146,8 +169,9 @@ public class ClientConnection extends Thread {
 
     /**
      * Send images to the server
+     *
      * @param imgbyte - the image want to send
-     * @param pic - file want to send
+     * @param pic     - file want to send
      */
     public void connect(byte[] imgbyte, File pic) {
         try {
@@ -171,6 +195,7 @@ public class ClientConnection extends Thread {
 
     /**
      * Convert the image to bytes
+     *
      * @param pic - the picture want to convet
      * @return - image converted to bytes
      */
@@ -179,7 +204,7 @@ public class ClientConnection extends Thread {
             FileInputStream fis = new FileInputStream(pic);
             Bitmap bm = BitmapFactory.decodeStream(fis);
             return getBytesFromBitmap(bm);
-        } catch(Exception e) {
+        } catch (Exception e) {
             Log.e("TCP", "C: Error", e);
         }
         return null;
@@ -187,6 +212,7 @@ public class ClientConnection extends Thread {
 
     /**
      * Gets teh bytes from bitmap
+     *
      * @param bitmap - the bitmap
      * @return an array of bytes
      */
@@ -203,7 +229,7 @@ public class ClientConnection extends Thread {
         // Getting the Camera Folder
         connectToServer();
         File dcim = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM), "Camera");
-        if(dcim == null) return;
+        if (dcim == null) return;
         try {
             File[] pics = dcim.listFiles();
             int count = pics.length;
@@ -214,7 +240,7 @@ public class ClientConnection extends Thread {
                     byte[] byte_pic = picToByte(pic);
                     //calls connect with the picture in bytes and the file
                     connect(byte_pic, pic);
-                    if(count == (pics.length / 2)) {
+                    if (count == (pics.length / 2)) {
                         builder.setContentText("Half way through");
                         builder.setProgress(100, 50, false);
                         nm.notify(1, builder.build());
@@ -222,7 +248,7 @@ public class ClientConnection extends Thread {
                     count--;
                 }
             }
-        } catch(Exception e) {
+        } catch (Exception e) {
             Log.e("TCP", "C: Error", e);
         } finally {
             try {

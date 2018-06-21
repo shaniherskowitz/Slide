@@ -23,16 +23,17 @@ import android.widget.Switch;
 
 public class MainSlide extends AppCompatActivity {
 
-    private final int  MY_PERMISSIONS_REQUEST_READ_CONTACTS = 101;
+    private final int MY_PERMISSIONS_REQUEST_READ_CONTACTS = 101;
 
     private Context context;
     private BroadcastReceiver receiver;
-    private Thread client;
+    private ClientConnection client;
     private NotificationCompat.Builder builder;
     private NotificationManager nm;
 
     /**
      * Create the app
+     *
      * @param savedInstanceState
      */
     @Override
@@ -40,55 +41,63 @@ public class MainSlide extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main_slide);
         context = this;
+        try {
+            //create the connection with the client
+            progBar();
+            client = new ClientConnection(builder, nm, this, false);
+            client.broadcast();
+
+
+
+
+        } catch (Exception e) {
+        }
         if (ContextCompat.checkSelfPermission(context,
                 Manifest.permission.READ_CONTACTS)
                 != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(this,
-                        new String[]{Manifest.permission.READ_CONTACTS},
-                        MY_PERMISSIONS_REQUEST_READ_CONTACTS);
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.READ_CONTACTS},
+                    MY_PERMISSIONS_REQUEST_READ_CONTACTS);
         } else {
 
         }
     }
 
-        @Override
-        public void onRequestPermissionsResult ( int requestCode, String permissions[], int[] grantResults){
-            switch (requestCode) {
-                case MY_PERMISSIONS_REQUEST_READ_CONTACTS: {
-                    if (grantResults.length > 0
-                            && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
 
-                    } else {
-                    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case MY_PERMISSIONS_REQUEST_READ_CONTACTS: {
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+
+                } else {
                 }
             }
         }
+    }
 
 
     /**
      * Deals with the service switch - when it is on and off
+     *
      * @param view - the app view
      */
     public void serviceSwitch(View view) {
         Switch s = findViewById(R.id.switch1);
-        if(s.isChecked()) {
+        if (s.isChecked()) {
             //create an intent as an activity to either start or stop the service
             Intent intent = new Intent(this, ImageServiceService.class);
             startService(intent);
-            //send images when connected to wifi
-            try {
-                //create the connection with the client
-                progBar();
-                client = new ClientConnection(builder, nm, this);
-                client.run();
-
-
-
-            } catch (Exception e) {}
+            client.setOn(true);
+            if(client.isConnected()) client.startTransfer();
 
         } else {
             Intent intent = new Intent(this, ImageServiceService.class);
             stopService(intent);
+            client.setOn(false);
+
         }
     }
 
@@ -97,7 +106,7 @@ public class MainSlide extends AppCompatActivity {
      */
     public void progBar() {
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(this);
-        nm = (NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
+        nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         NotificationChannel channel = null;
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
             channel = new NotificationChannel("default", "default", NotificationManager.IMPORTANCE_DEFAULT);
@@ -113,26 +122,26 @@ public class MainSlide extends AppCompatActivity {
     /**
      * only send images when connected to wifi
      */
-    public void broadcast() {
-        final IntentFilter theFilter = new IntentFilter();
-        theFilter.addAction("android.net.wifi.supplicant.CONNECTION_CHANGE");
-        theFilter.addAction("android.net.wifi.STATE_CHANGE");
-        this.receiver = new BroadcastReceiver() {
-
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                WifiManager wifiManager = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-                NetworkInfo networkInfo = intent.getParcelableExtra(wifiManager.EXTRA_NETWORK_INFO);
-                if (networkInfo != null) {
-                    if (networkInfo.getType() == ConnectivityManager.TYPE_WIFI) { //get the different network states
-                        if (networkInfo.getState() == NetworkInfo.State.CONNECTED) {
-                            ClientConnection c = (ClientConnection) client;
-                            c.startTransfer();
-                        }
-                    }
-                }
-            }
-        };
-        this.registerReceiver(this.receiver, theFilter);
-    }
+//    public void broadcast() {
+//        final IntentFilter theFilter = new IntentFilter();
+//        theFilter.addAction("android.net.wifi.supplicant.CONNECTION_CHANGE");
+//        theFilter.addAction("android.net.wifi.STATE_CHANGE");
+//        this.receiver = new BroadcastReceiver() {
+//
+//            @Override
+//            public void onReceive(Context context, Intent intent) {
+//                WifiManager wifiManager = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+//                NetworkInfo networkInfo = intent.getParcelableExtra(wifiManager.EXTRA_NETWORK_INFO);
+//                if (networkInfo != null) {
+//                    if (networkInfo.getType() == ConnectivityManager.TYPE_WIFI) { //get the different network states
+//                        if (networkInfo.getState() == NetworkInfo.State.CONNECTED) {
+//                            ClientConnection c = (ClientConnection) client;
+//                            c.startTransfer();
+//                        }
+//                    }
+//                }
+//            }
+//        };
+//        this.registerReceiver(this.receiver, theFilter);
+//    }
 }
